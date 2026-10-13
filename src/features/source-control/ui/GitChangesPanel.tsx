@@ -402,7 +402,7 @@ function ChangedFiles({
   const canCommitPush =
     canCommit && hasRemote && !diverged && (!amend || !index?.headPushed);
   const canCommitPushPr = canCommitPush && !hasOpenPr && !onDefault;
-  const canEditMessage = (staged.length > 0 || amend) && !busy;
+  const canEditMessage = !busy;
 
   useEffect(() => {
     if (!amendTarget) return;
@@ -946,7 +946,7 @@ function ChangedFiles({
   );
 }
 
-function usePrStatus(
+export function usePrStatus(
   cwd: string,
   branch: string | null | undefined,
 ): { pr: GitPr | null; reload: () => void } {
@@ -1008,7 +1008,7 @@ function syncStatusLabel(index: GitDiffIndex): string {
   return "No files";
 }
 
-function GitSyncActions({
+export function GitSyncActions({
   index,
   pr,
   busy,
@@ -1696,7 +1696,8 @@ function useDiffIndex(
   return { index, reload };
 }
 
-function cachedIndex(cwd: string | undefined): GitDiffIndex | null {
+/** The last Git status read for a checkout, shared so other views open on it. */
+export function cachedIndex(cwd: string | undefined): GitDiffIndex | null {
   if (!cwd || cwd === "~") return null;
   return indexByCwd.get(cwd) ?? null;
 }
@@ -1728,7 +1729,12 @@ function changedFilePaths(prev: GitDiffIndex, next: GitDiffIndex): string[] {
   return paths;
 }
 
-function sameIndex(prev: GitDiffIndex | null, next: GitDiffIndex): boolean {
+export function rememberIndex(cwd: string, index: GitDiffIndex | null) {
+  if (index) indexByCwd.set(cwd, index);
+  else indexByCwd.delete(cwd);
+}
+
+export function sameIndex(prev: GitDiffIndex | null, next: GitDiffIndex): boolean {
   if (!prev) return false;
   if (
     prev.branch !== next.branch ||
